@@ -65,8 +65,6 @@ function fadeIn() {
 
   let cancelIdx = window.requestAnimationFrame(function makeFadeOut(time) {
     if (lightValue >= 1) {
-
-      console.debug("Fade in finished");
       window.cancelAnimationFrame(cancelIdx);
       return;
     }
@@ -92,7 +90,6 @@ function fadeOut(onEnd) {
 
   let cancelIdx = window.requestAnimationFrame(function makeFadeOut(time) {
     if (lightValue <= 0 && bulbLightValue <= 0) {
-      console.debug("Fade out finished");
       window.cancelAnimationFrame(cancelIdx);
       onEnd?.();
       fadeIn();
@@ -136,8 +133,6 @@ function moveForward() {
   } else {
     currentIndex++;
   }
-
-  console.debug("forward to index", currentIndex);
 
   fadeOut(() => {
     placeInBegin();
