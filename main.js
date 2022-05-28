@@ -229,6 +229,8 @@ async function start() {
   scene.add(switcher.scene);
   scene.add(vagon.scene);
 
+  document.querySelector('#loading').textContent = '';
+
   animate();
 }
 
