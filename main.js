@@ -158,11 +158,6 @@ function moveBackward() {
 }
 
 window.addEventListener('keydown', (e) => {
-  if (e.keyCode === 39) {
-    e.stopPropagation();
-    return false;
-  }
-
   if (e.keyCode !== 13) {
     return;
   }
