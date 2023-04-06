@@ -1,7 +1,7 @@
 {
   "name": "@underoot/game-train-with-light-bulbs",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

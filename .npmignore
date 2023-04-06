@@ -1,0 +1,7 @@
+.github
+dist/
+.editorconfig
+favicon.svg
+index.html
+style.css
+vite.config.js
