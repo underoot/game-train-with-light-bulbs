@@ -35,6 +35,11 @@ camera.position.set(0, PERSON_HEIGHT);
 
 const renderer = new THREE.WebGLRenderer();
 
+const listener = new THREE.AudioListener();
+camera.add(listener);
+
+const bulbSound = new THREE.PositionalAudio(listener);
+
 let lightValue = 1;
 let bulbLightValue = states[currentIndex] ? 1 : 0;
 
@@ -84,6 +89,8 @@ function fadeOut(onEnd) {
   let startTime = 0;
   bulbLightSphere.visible = false;
 
+  bulbSound.stop();
+
   let cancelIdx = window.requestAnimationFrame(function makeFadeOut(time) {
     if (lightValue <= 0 && bulbLightValue <= 0) {
       window.cancelAnimationFrame(cancelIdx);
@@ -106,8 +113,10 @@ function fadeOut(onEnd) {
 function toggleLight() {
   if (bulbLightValue <= 0) {
     bulbLightValue = 1;
+    bulbSound.play();
   } else {
     bulbLightValue = 0;
+    bulbSound.stop();
   }
 
   bulbLightSphere.visible = !bulbLightSphere.visible;
@@ -117,11 +126,23 @@ function toggleLight() {
 function placeInEnd() {
   camera.position.set(0, PERSON_HEIGHT, -900);
   camera.lookAt(0, 0, 0);
+
+  if (states[currentIndex]) {
+    bulbSound.play();
+  } else {
+    bulbSound.stop();
+  }
 }
 
 function placeInBegin() {
   camera.position.set(0, PERSON_HEIGHT, 900);
   camera.lookAt(0, 0, 0);
+
+  if (states[currentIndex]) {
+    bulbSound.play();
+  } else {
+    bulbSound.stop();
+  }
 }
 
 function moveForward() {
@@ -194,49 +215,6 @@ document.addEventListener('keydown', onKeyDown, false)
 document.addEventListener('keyup', onKeyUp, false);
 
 
-function animate() {
-  camera.position.y = PERSON_HEIGHT;
-  renderer.render(scene, camera);
-
-  if (camera.position.z < -900) {
-    camera.position.z = -900;
-  }
-
-  if (camera.position.z > 1000) {
-    camera.position.z = 1000;
-  }
-
-  if (camera.position.x > 150) {
-    camera.position.x = 150;
-  }
-
-  if (camera.position.x < -150) {
-    camera.position.x = -150;
-  }
-
-  for (const key of moveKey.values()) {
-    switch (key) {
-      case 87:
-        person.moveForward(10)
-        break
-      case 68:
-        person.moveRight(10)
-        break
-      case 83:
-        person.moveForward(-10)
-        break
-      case 65:
-        person.moveRight(-10)
-        break
-    }
-  }
-
-  pointLight.intensity = bulbLightValue;
-  light.intensity = lightValue;
-
-  requestAnimationFrame(animate);
-}
-
 export async function init(domElement) {
   domElement.classList.add('game-loading');
   domElement.style.setProperty('display', 'flex');
@@ -249,9 +227,67 @@ export async function init(domElement) {
 
 
   const loader = new GLTFLoader();
-  const wagon = await loader.loadAsync('wagon/scene.gltf');
-  const bulb = await loader.loadAsync('light_bulb/scene.gltf');
-  const switcher = await loader.loadAsync('light_switch/scene.gltf');
+  const audioLoader = new THREE.AudioLoader();
+  const [
+    wagon,
+    bulb,
+    switcher,
+    bulbAudioBuffer
+  ] = await Promise.all([
+    loader.loadAsync('wagon/scene.gltf'),
+    loader.loadAsync('light_bulb/scene.gltf'),
+    loader.loadAsync('light_switch/scene.gltf'),
+    audioLoader.loadAsync('light_bulb/sound.ogg')
+  ]);
+
+  bulbSound.autoplay = false;
+  bulbSound.setBuffer(bulbAudioBuffer);
+  bulbSound.setLoop(true);
+  bulbSound.setRefDistance(20);
+
+  function animate() {
+    camera.position.y = PERSON_HEIGHT;
+    renderer.render(scene, camera);
+
+    if (camera.position.z < -900) {
+      camera.position.z = -900;
+    }
+
+    if (camera.position.z > 1000) {
+      camera.position.z = 1000;
+    }
+
+    if (camera.position.x > 150) {
+      camera.position.x = 150;
+    }
+
+    if (camera.position.x < -150) {
+      camera.position.x = -150;
+    }
+
+    for (const key of moveKey.values()) {
+      switch (key) {
+        case 87:
+          person.moveForward(10)
+          break
+        case 68:
+          person.moveRight(10)
+          break
+        case 83:
+          person.moveForward(-10)
+          break
+        case 65:
+          person.moveRight(-10)
+          break
+      }
+    }
+
+    pointLight.intensity = bulbLightValue;
+    light.intensity = lightValue;
+
+    requestAnimationFrame(animate);
+  }
+
 
   bulb.scene.position.set(0, 430, 0);
   bulb.scene.rotateX(Math.PI);
@@ -263,6 +299,8 @@ export async function init(domElement) {
   scene.add(bulb.scene);
   scene.add(switcher.scene);
   scene.add(wagon.scene);
+
+  bulb.scene.add(bulbSound);
 
   scene.add(person.getObject());
 
@@ -321,6 +359,11 @@ To enter full screen press "Meta/Alt + Enter"
 
   startButton.addEventListener('click', () => {
     description.innerHTML = '';
+
+    if (states[currentIndex]) {
+      bulbSound.play();
+    }
+
 
     domElement.addEventListener('click', lockListener);
 
