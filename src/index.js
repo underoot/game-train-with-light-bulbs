@@ -250,12 +250,12 @@ export async function init(domElement) {
     doorSoundBuffer,
     footstepsSoundBuffer
   ] = await Promise.all([
-    loader.loadAsync('wagon/scene.gltf'),
-    loader.loadAsync('light_bulb/scene.gltf'),
-    loader.loadAsync('light_switch/scene.gltf'),
-    audioLoader.loadAsync('light_bulb/sound.ogg'),
-    audioLoader.loadAsync('wagon/door.ogg'),
-    audioLoader.loadAsync('wagon/footsteps.ogg')
+    loader.loadAsync('/game-train-with-light-bulbs/assets/wagon/scene.gltf'),
+    loader.loadAsync('/game-train-with-light-bulbs/assets/light_bulb/scene.gltf'),
+    loader.loadAsync('/game-train-with-light-bulbs/assets/light_switch/scene.gltf'),
+    audioLoader.loadAsync('/game-train-with-light-bulbs/assets/light_bulb/sound.ogg'),
+    audioLoader.loadAsync('/game-train-with-light-bulbs/assets/wagon/door.ogg'),
+    audioLoader.loadAsync('/game-train-with-light-bulbs/assets/wagon/footsteps.ogg')
   ]);
 
   bulbSound.autoplay = false;
