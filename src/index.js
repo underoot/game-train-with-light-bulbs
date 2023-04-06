@@ -39,9 +39,19 @@ const listener = new THREE.AudioListener();
 camera.add(listener);
 
 const bulbSound = new THREE.PositionalAudio(listener);
+const startDoorSound = new THREE.PositionalAudio(listener);
+const endDoorSound = new THREE.PositionalAudio(listener);
+const footstepsSound = new THREE.Audio(listener);
 
 let lightValue = 1;
+let footstepsPlaying = false;
 let bulbLightValue = states[currentIndex] ? 1 : 0;
+
+const endDoorHandle = new THREE.Object3D();
+const startDoorHandle = new THREE.Object3D();
+
+endDoorHandle.position.set(25, 0, 900);
+startDoorHandle.position.set(25, 0, -800);
 
 const bulbLightSphere = new THREE.Mesh(
   new THREE.SphereGeometry(12, 250, 250),
@@ -89,7 +99,9 @@ function fadeOut(onEnd) {
   let startTime = 0;
   bulbLightSphere.visible = false;
 
-  bulbSound.stop();
+  if (bulbSound.isPlaying) {
+    bulbSound.stop();
+  }
 
   let cancelIdx = window.requestAnimationFrame(function makeFadeOut(time) {
     if (lightValue <= 0 && bulbLightValue <= 0) {
@@ -183,11 +195,13 @@ window.addEventListener('keydown', (e) => {
   }
 
   if (x <= 50 && x >= -25 && z > 900) {
+    endDoorSound.play();
     moveBackward();
     return;
   }
 
   if (x <= 50 && x >= -50 && z < -800) {
+    startDoorSound.play();
     moveForward();
     return;
   }
@@ -232,18 +246,33 @@ export async function init(domElement) {
     wagon,
     bulb,
     switcher,
-    bulbAudioBuffer
+    bulbAudioBuffer,
+    doorSoundBuffer,
+    footstepsSoundBuffer
   ] = await Promise.all([
     loader.loadAsync('wagon/scene.gltf'),
     loader.loadAsync('light_bulb/scene.gltf'),
     loader.loadAsync('light_switch/scene.gltf'),
-    audioLoader.loadAsync('light_bulb/sound.ogg')
+    audioLoader.loadAsync('light_bulb/sound.ogg'),
+    audioLoader.loadAsync('wagon/door.ogg'),
+    audioLoader.loadAsync('wagon/footsteps.ogg')
   ]);
 
   bulbSound.autoplay = false;
+  bulbSound.setVolume(10);
   bulbSound.setBuffer(bulbAudioBuffer);
   bulbSound.setLoop(true);
   bulbSound.setRefDistance(20);
+
+  startDoorSound.setVolume(20)
+  startDoorSound.setBuffer(doorSoundBuffer);
+  startDoorHandle.add(startDoorSound);
+  endDoorSound.setVolume(20)
+  endDoorSound.setBuffer(doorSoundBuffer);
+  endDoorHandle.add(endDoorSound);
+
+  footstepsSound.setVolume(0.2);
+  footstepsSound.setBuffer(footstepsSoundBuffer);
 
   function animate() {
     camera.position.y = PERSON_HEIGHT;
@@ -266,6 +295,14 @@ export async function init(domElement) {
     }
 
     for (const key of moveKey.values()) {
+      if (!footstepsPlaying) {
+        setTimeout(() => {
+          footstepsPlaying = false;
+        }, 200);
+        footstepsPlaying = true;
+        footstepsSound.play();
+      }
+
       switch (key) {
         case 87:
           person.moveForward(10)
@@ -299,6 +336,8 @@ export async function init(domElement) {
   scene.add(bulb.scene);
   scene.add(switcher.scene);
   scene.add(wagon.scene);
+  scene.add(startDoorHandle);
+  scene.add(endDoorHandle);
 
   bulb.scene.add(bulbSound);
 
