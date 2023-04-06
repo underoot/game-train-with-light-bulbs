@@ -261,6 +261,8 @@ export async function init(domElement) {
     audioLoader.loadAsync('/game-train-with-light-bulbs/wagon/footsteps.ogg')
   ]);
 
+  domElement.innerHTML = ""
+
   bulbSound.autoplay = false;
   bulbSound.setVolume(10);
   bulbSound.setBuffer(bulbAudioBuffer);
