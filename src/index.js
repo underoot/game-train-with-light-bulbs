@@ -236,7 +236,7 @@ export async function init(domElement) {
   domElement.style.setProperty('color', 'white');
   domElement.style.setProperty('justify-content', 'center');
   domElement.style.setProperty('align-items', 'center');
-  domElement.style.setProperty('font-size', '24px');
+  domElement.style.setProperty('font-size', '18px');
   domElement.style.setProperty('font-weight', '600');
   domElement.style.setProperty('position', 'relative');
 
