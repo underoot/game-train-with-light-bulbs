@@ -233,11 +233,14 @@ export async function init(domElement) {
   domElement.classList.add('game-loading');
   domElement.style.setProperty('display', 'flex');
   domElement.style.setProperty('background-color', 'black');
+  domElement.style.setProperty('color', 'white');
   domElement.style.setProperty('justify-content', 'center');
   domElement.style.setProperty('align-items', 'center');
   domElement.style.setProperty('font-size', '24px');
   domElement.style.setProperty('font-weight', '600');
   domElement.style.setProperty('position', 'relative');
+
+  domElement.innerHTML = "Loading..."
 
 
   const loader = new GLTFLoader();
