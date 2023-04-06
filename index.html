@@ -5,18 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="controls">
-      <div id="mobile">This game available only on desktop</div>
-      <div id="loading">
-        Loading...
-      </div>
-      <div id="buttons">
-        <button id="answer">Answer</button>
-        <button id="reboot">Restart</button>
-      </div>
-    </div>
-    <script type="module" src="/main.js"></script>
+    <main>
+      <div id="game"></div>
+    </main>
+    <script type="module">
+      import { init } from './src';
+      init(document.querySelector('#game'));
+    </script>
   </body>
 </html>

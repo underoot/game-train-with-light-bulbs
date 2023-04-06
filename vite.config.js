@@ -1,3 +1,3 @@
 module.exports = {
-  base: '/bulb-train/'
+  base: '/game-train-with-light-bulbs/'
 };
