@@ -258,9 +258,15 @@ function assignButtonStyle(el) {
 
 function assignControlStyle(el) {
   el.classList.add('controllable');
-  addEventListener('selectionchange', (e) => {
-    e.preventDefault();
-  })
+
+  function absorbEvent(event) {
+    event.returnValue = false;
+  }
+
+  el.addEventListener("touchstart", absorbEvent);
+  el.addEventListener("touchend", absorbEvent);
+  el.addEventListener("touchmove", absorbEvent);
+  el.addEventListener("touchcancel", absorbEvent);
   assignStyles(el, {
     'position': 'absolute',
     'border-radius': '50%',
@@ -366,7 +372,9 @@ export async function init(domElement) {
           footstepsPlaying = false;
         }, 200);
         footstepsPlaying = true;
-        footstepsSound.play();
+        if (!footstepsSound.isPlaying) {
+          footstepsSound.play();
+        }
       }
 
       switch (key) {
@@ -529,7 +537,9 @@ To enter full screen press "Meta/Alt + Enter"
           assignButtonStyle(restartButton);
           restartButton.addEventListener('click', () => {
             description.innerHTML = '';
-            person.lock();
+            try {
+              person.lock();
+            } catch (e) {}
             domElement.addEventListener('click', lockListener);
             description.style.setProperty('background-color', 'transparent');
           }, { once: true });
@@ -585,17 +595,20 @@ To enter full screen press "Meta/Alt + Enter"
             break;
         }
 
-        ctrl.addEventListener('pointerdown', () => {
+        ctrl.addEventListener('pointerdown', (e) => {
           domElement.removeEventListener('click', lockListener);
           moveKey.add(key);
+          e.returnValue = false;
         });
-        ctrl.addEventListener('pointerup', () => {
+        ctrl.addEventListener('pointerup', (e) => {
           domElement.addEventListener('click', lockListener);
           moveKey.delete(key);
+          e.returnValue = false;
         });
-        ctrl.addEventListener('pointerleave', () => {
+        ctrl.addEventListener('pointerleave', (e) => {
           domElement.addEventListener('click', lockListener);
           moveKey.delete(key);
+          e.returnValue = false;
         });
 
         return ctrl;
@@ -619,12 +632,10 @@ To enter full screen press "Meta/Alt + Enter"
       rLeft.addEventListener('pointerup', () => {
         domElement.addEventListener('click', lockListener);
         rotateKey = '';
-        moveKey.delete(key);
       });
       rLeft.addEventListener('pointerleave', () => {
         domElement.addEventListener('click', lockListener);
         rotateKey = '';
-        moveKey.delete(key);
       });
 
       const rRight = document.createElement('button');
@@ -643,15 +654,12 @@ To enter full screen press "Meta/Alt + Enter"
         rotateKey = 'R';
       });
       rRight.addEventListener('pointerup', () => {
-        e.preventDefault();
         domElement.addEventListener('click', lockListener);
         rotateKey = '';
-        moveKey.delete(key);
       });
       rRight.addEventListener('pointerleave', () => {
         domElement.addEventListener('click', lockListener);
         rotateKey = '';
-        moveKey.delete(key);
       });
 
       const answerB = document.createElement('button');
@@ -705,7 +713,16 @@ To enter full screen press "Meta/Alt + Enter"
         camera.updateProjectionMatrix();
 
         domElement.requestFullscreen().then(() => {
-          person.lock();
+          const width = window.screen.width;
+          const height = window.screen.height;
+          renderer.domElement.width = width;
+          renderer.domElement.height = height;
+          renderer.setSize(width, height);
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          try {
+            person.lock();
+          } catch (e) {}
         });
       }
 
