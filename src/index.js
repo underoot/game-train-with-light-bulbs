@@ -256,9 +256,9 @@ export async function init(domElement) {
     loader.loadAsync('/game-train-with-light-bulbs/wagon/scene.gltf'),
     loader.loadAsync('/game-train-with-light-bulbs/light_bulb/scene.gltf'),
     loader.loadAsync('/game-train-with-light-bulbs/light_switch/scene.gltf'),
-    audioLoader.loadAsync('/game-train-with-light-bulbs/light_bulb/sound.ogg'),
-    audioLoader.loadAsync('/game-train-with-light-bulbs/wagon/door.ogg'),
-    audioLoader.loadAsync('/game-train-with-light-bulbs/wagon/footsteps.ogg')
+    audioLoader.loadAsync('/game-train-with-light-bulbs/light_bulb/sound.wav'),
+    audioLoader.loadAsync('/game-train-with-light-bulbs/wagon/door.wav'),
+    audioLoader.loadAsync('/game-train-with-light-bulbs/wagon/footsteps.wav')
   ]);
 
   domElement.innerHTML = ""
