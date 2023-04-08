@@ -137,7 +137,7 @@ function toggleLight() {
 
 function placeInEnd() {
   camera.position.set(0, PERSON_HEIGHT, -900);
-  camera.lookAt(0, 0, 0);
+  camera.lookAt(0, 200, 0);
 
   if (states[currentIndex]) {
     bulbSound.play();
@@ -148,7 +148,7 @@ function placeInEnd() {
 
 function placeInBegin() {
   camera.position.set(0, PERSON_HEIGHT, 900);
-  camera.lookAt(0, 0, 0);
+  camera.lookAt(0, 200, 0);
 
   if (states[currentIndex]) {
     bulbSound.play();
@@ -182,11 +182,7 @@ function moveBackward() {
   });
 }
 
-window.addEventListener('keydown', (e) => {
-  if (e.keyCode !== 13) {
-    return;
-  }
-
+function enterHandle() {
   const { x, z } = camera.position;
 
   if (x <= -25 && z <= -800) {
@@ -205,11 +201,20 @@ window.addEventListener('keydown', (e) => {
     moveForward();
     return;
   }
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.keyCode !== 13) {
+    return;
+  }
+
+  enterHandle();
 });
 
 const person = new PointerLockControls(camera, renderer.domElement);
 
 let moveKey = new Set();
+let rotateKey = '';
 let targetKeyCodes = [87, 68, 83, 65];
 
 const onKeyDown = function (event) {
@@ -228,17 +233,68 @@ const onKeyUp = function (event) {
 document.addEventListener('keydown', onKeyDown, false)
 document.addEventListener('keyup', onKeyUp, false);
 
+/**
+ * @param {*} el
+ * @param {object} styleObj 
+ */
+function assignStyles(el, styleObj) {
+  for (let [prop, val] of Object.entries(styleObj)) {
+    if (!Object.getOwnPropertyNames(styleObj).includes(prop)) {
+      return;
+    }
+
+    el.style.setProperty(prop, val);
+  }
+}
+
+function assignButtonStyle(el) {
+  assignStyles(el, {
+    'background-color': 'transparent',
+    'padding': '12px 10px',
+    'border': '2px solid white',
+    'color': 'white'
+  });
+}
+
+function assignControlStyle(el) {
+  el.classList.add('controllable');
+  addEventListener('selectionchange', (e) => {
+    e.preventDefault();
+  })
+  assignStyles(el, {
+    'position': 'absolute',
+    'border-radius': '50%',
+    'width': '20px',
+    'height': '20px',
+    'justify-content': 'center',
+    'align-items': 'center',
+    'user-select': 'none',
+  });
+}
+
+function assignInputStyle(el) {
+  assignStyles(el, {
+    'background-color': 'rgba(255, 255, 255, 0.6)',
+    'padding': '12px 10px',
+    'border': '2px solid white'
+  });
+}
 
 export async function init(domElement) {
+  const domStyle = document.createElement('style');
+
   domElement.classList.add('game-loading');
-  domElement.style.setProperty('display', 'flex');
-  domElement.style.setProperty('background-color', 'black');
-  domElement.style.setProperty('color', 'white');
-  domElement.style.setProperty('justify-content', 'center');
-  domElement.style.setProperty('align-items', 'center');
-  domElement.style.setProperty('font-size', '18px');
-  domElement.style.setProperty('font-weight', '600');
-  domElement.style.setProperty('position', 'relative');
+  assignStyles(domElement, {
+    'display': 'flex',
+    'background-color': 'black',
+    'color': 'white',
+    'justify-content': 'center',
+    'align-items': 'center',
+    'font-size': '18px',
+    'font-weight': '600',
+    'position': 'relative',
+    'user-select': 'none',
+  });
 
   domElement.innerHTML = "Loading..."
 
@@ -262,6 +318,11 @@ export async function init(domElement) {
   ]);
 
   domElement.innerHTML = ""
+  domStyle.textContent = `
+    .controllable { display: flex; }
+    @media (min-width: 720px) { .controllable { display: none; } }
+  `;
+  domElement.appendChild(domStyle);
 
   bulbSound.autoplay = false;
   bulbSound.setVolume(10);
@@ -324,6 +385,12 @@ export async function init(domElement) {
       }
     }
 
+    if (rotateKey === 'R') {
+      camera.rotateY(-0.02);
+    } else if (rotateKey === 'L') {
+      camera.rotateY(0.02);
+    }
+
     pointLight.intensity = bulbLightValue;
     light.intensity = lightValue;
 
@@ -370,18 +437,20 @@ export async function init(domElement) {
 
   const description = document.createElement('div');
 
-  description.style.setProperty('position', 'absolute');
-  description.style.setProperty('top', '0');
-  description.style.setProperty('right', '0');
-  description.style.setProperty('bottom', '0');
-  description.style.setProperty('left', '0');
-  description.style.setProperty('display', 'flex');
-  description.style.setProperty('flex-direction', 'column');
-  description.style.setProperty('justify-content', 'center');
-  description.style.setProperty('align-items', 'center');
-  description.style.setProperty('padding', '24px');
-  description.style.setProperty('text-align', 'center');
-  description.style.setProperty('color', 'white');
+  assignStyles(description, {
+    'position': 'absolute',
+    'top': '0',
+    'right': '0',
+    'bottom': '0',
+    'left': '0',
+    'display': 'flex',
+    'flex-direction': 'column',
+    'justify-content': 'center',
+    'align-items': 'center',
+    'padding': '24px',
+    'text-align': 'center',
+    'color': 'white',
+  });
 
   const instruction = document.createElement('p');
   instruction.innerHTML = `
@@ -397,8 +466,12 @@ To enter full screen press "Meta/Alt + Enter"
   const startButton = document.createElement('button');
   startButton.textContent = 'Start!';
 
+  assignButtonStyle(startButton);
+
   let lockListener = () => {
-    person.lock();
+    try {
+      person.lock();
+    } catch (e) {}
   };
 
   startButton.addEventListener('click', () => {
@@ -408,6 +481,216 @@ To enter full screen press "Meta/Alt + Enter"
       bulbSound.play();
     }
 
+    function answer() {
+      domElement.removeEventListener('click', lockListener);
+      description.style.setProperty('background-color', 'rgba(0, 0, 0, 0.7');
+      try {
+        person.unlock();
+      } catch (e) {
+
+      }
+      const instruction = document.createElement('p');
+      instruction.innerHTML = `
+        So, what is the number of wagons in train?
+      `;
+      const inputValue = document.createElement('input');
+      inputValue.type = 'number';
+      inputValue.min = MIN_COUNT;
+      inputValue.max = MAX_COUNT;
+      assignInputStyle(inputValue);
+      const answerButton = document.createElement('button');
+      answerButton.textContent = 'Answer!';
+      assignButtonStyle(answerButton);
+      answerButton.addEventListener('click', () => {
+        description.innerHTML = '';
+        if (Number.parseInt(inputValue.value) === count) {
+          const instruction = document.createElement('p');
+          instruction.innerHTML = 'Correct!';
+          assignButtonStyle(instruction);
+          const restartButton = document.createElement('button');
+          restartButton.textContent = 'Restart!';
+          restartButton.addEventListener('click', () => {
+            count = count_new();
+            states = state_new();
+            currentIndex = 0;
+            moveBackward();
+            description.innerHTML = '';
+            person.lock();
+            domElement.addEventListener('click', lockListener);
+            description.style.setProperty('background-color', 'transparent');
+          }, { once: true });
+          description.appendChild(instruction);
+          description.appendChild(restartButton);
+        } else {
+          const instruction = document.createElement('p');
+          instruction.innerHTML = 'Wrong!';
+          const restartButton = document.createElement('button');
+          restartButton.textContent = 'Try again!';
+          assignButtonStyle(restartButton);
+          restartButton.addEventListener('click', () => {
+            description.innerHTML = '';
+            person.lock();
+            domElement.addEventListener('click', lockListener);
+            description.style.setProperty('background-color', 'transparent');
+          }, { once: true });
+          description.appendChild(instruction);
+          description.appendChild(restartButton);
+        }
+      }, { once: true });
+      description.appendChild(instruction);
+      description.appendChild(inputValue);
+      description.appendChild(document.createElement('p'));
+      description.append(answerButton);
+    }
+    
+    function initControls() {
+      const [w, d, s, a] = new Array(4).fill(null).map((_, idx) => {
+        const ctrl = document.createElement('button');
+        let key = 0;
+        assignButtonStyle(ctrl);
+        assignControlStyle(ctrl);
+
+        switch(idx) {
+          case 0:
+            ctrl.textContent = 'W';
+            assignStyles(ctrl, {
+              'left': '40px',
+              'bottom': '45px'
+            });
+            key = 87;
+            break;
+          case 1:
+            ctrl.textContent = 'D';
+            assignStyles(ctrl, {
+              'left': '70px',
+              'bottom': '10px'
+            });
+            key = 68;
+            break;
+          case 2:
+            ctrl.textContent = 'S';
+            assignStyles(ctrl, {
+              'left': '40px',
+              'bottom': '10px'
+            });
+            key = 83;
+            break;
+          case 3:
+            ctrl.textContent = 'A';
+            assignStyles(ctrl, {
+              'left': '10px',
+              'bottom': '10px'
+            });
+            key = 65;
+            break;
+        }
+
+        ctrl.addEventListener('pointerdown', () => {
+          domElement.removeEventListener('click', lockListener);
+          moveKey.add(key);
+        });
+        ctrl.addEventListener('pointerup', () => {
+          domElement.addEventListener('click', lockListener);
+          moveKey.delete(key);
+        });
+        ctrl.addEventListener('pointerleave', () => {
+          domElement.addEventListener('click', lockListener);
+          moveKey.delete(key);
+        });
+
+        return ctrl;
+      });
+
+      const rLeft = document.createElement('button');
+      assignButtonStyle(rLeft);
+      assignControlStyle(rLeft);
+
+      assignStyles(rLeft, {
+        'right': '130px',
+        'bottom': '10px'
+      });
+
+      rLeft.textContent = 'L';
+
+      rLeft.addEventListener('pointerdown', () => {
+        domElement.removeEventListener('click', lockListener);
+        rotateKey = 'L';
+      });
+      rLeft.addEventListener('pointerup', () => {
+        domElement.addEventListener('click', lockListener);
+        rotateKey = '';
+        moveKey.delete(key);
+      });
+      rLeft.addEventListener('pointerleave', () => {
+        domElement.addEventListener('click', lockListener);
+        rotateKey = '';
+        moveKey.delete(key);
+      });
+
+      const rRight = document.createElement('button');
+      assignButtonStyle(rRight);
+      assignControlStyle(rRight);
+
+      assignStyles(rRight, {
+        'right': '100px',
+        'bottom': '10px'
+      });
+
+      rRight.textContent = 'R';
+
+      rRight.addEventListener('pointerdown', () => {
+        domElement.removeEventListener('click', lockListener);
+        rotateKey = 'R';
+      });
+      rRight.addEventListener('pointerup', () => {
+        e.preventDefault();
+        domElement.addEventListener('click', lockListener);
+        rotateKey = '';
+        moveKey.delete(key);
+      });
+      rRight.addEventListener('pointerleave', () => {
+        domElement.addEventListener('click', lockListener);
+        rotateKey = '';
+        moveKey.delete(key);
+      });
+
+      const answerB = document.createElement('button');
+      assignButtonStyle(answerB);
+      assignControlStyle(answerB);
+
+      answerB.textContent = 'A';
+
+      assignStyles(answerB, {
+        'right': '200px',
+        'bottom': '10px'
+      });
+
+      answerB.addEventListener('pointerdown', () => {
+        answer();
+      });
+
+      const enterB = document.createElement('button');
+      assignButtonStyle(enterB);
+      assignControlStyle(enterB);
+
+      enterB.textContent = 'E';
+
+      assignStyles(enterB, {
+        'right': '40px',
+        'bottom': '10px'
+      });
+
+      enterB.addEventListener('pointerdown', () => {
+        enterHandle();
+      });
+
+      return [w, d, s, a, rLeft, rRight, answerB, enterB];
+    }
+
+
+    initControls().forEach(ctrl => {
+      domElement.appendChild(ctrl);
+    })
 
     domElement.addEventListener('click', lockListener);
 
@@ -427,57 +710,7 @@ To enter full screen press "Meta/Alt + Enter"
       }
 
       if (e.keyCode === 32) {
-        domElement.removeEventListener('click', lockListener);
-        description.style.setProperty('background-color', 'rgba(0, 0, 0, 0.7');
-        person.unlock();
-        const instruction = document.createElement('p');
-        instruction.innerHTML = `
-          So, what is the number of wagons in train?
-        `;
-        const inputValue = document.createElement('input');
-        inputValue.type = 'number';
-        inputValue.min = MIN_COUNT;
-        inputValue.max = MAX_COUNT;
-        const answerButton = document.createElement('button');
-        answerButton.textContent = 'Answer!';
-        answerButton.addEventListener('click', () => {
-          description.innerHTML = '';
-          if (Number.parseInt(inputValue.value) === count) {
-            const instruction = document.createElement('p');
-            instruction.innerHTML = 'Correct!';
-            const restartButton = document.createElement('button');
-            restartButton.textContent = 'Restart!';
-            restartButton.addEventListener('click', () => {
-              count = count_new();
-              states = state_new();
-              currentIndex = 0;
-              moveBackward();
-              description.innerHTML = '';
-              person.lock();
-              domElement.addEventListener('click', lockListener);
-              description.style.setProperty('background-color', 'transparent');
-            }, { once: true });
-            description.appendChild(instruction);
-            description.appendChild(restartButton);
-          } else {
-            const instruction = document.createElement('p');
-            instruction.innerHTML = 'Wrong!';
-            const restartButton = document.createElement('button');
-            restartButton.textContent = 'Try again!';
-            restartButton.addEventListener('click', () => {
-              description.innerHTML = '';
-              person.lock();
-              domElement.addEventListener('click', lockListener);
-              description.style.setProperty('background-color', 'transparent');
-            }, { once: true });
-            description.appendChild(instruction);
-            description.appendChild(restartButton);
-          }
-        }, { once: true });
-        description.appendChild(instruction);
-        description.appendChild(inputValue);
-        description.appendChild(document.createElement('p'));
-        description.append(answerButton);
+        answer();
       }
     });
   });
